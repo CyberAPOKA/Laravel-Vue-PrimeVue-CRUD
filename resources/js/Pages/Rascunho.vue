@@ -6,8 +6,6 @@ import Column from 'primevue/column';
 import { FilterMatchMode } from 'primevue/api';
 import InputText from 'primevue/inputtext';
 
-import Calendar from 'primevue/calendar';
-
 const props = defineProps({
     canLogin: Boolean,
     canRegister: Boolean,
@@ -27,12 +25,6 @@ const filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
     email: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
-
-// atenção nos seguintes detalhes:
-// filterDisplay="row"
-// v-model:filters="filters"
-
-const date = ref(null);
 </script>
 
 <template>
@@ -40,17 +32,30 @@ const date = ref(null);
         class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
 
         <div class="mx-auto p-6 lg:p-8">
-            <Calendar v-model="date" />
             <div class="card">
-                <DataTable :value="users" v-model:filters="filters" paginator :rows="5"
-                    :rowsPerPageOptions="[5, 10, 20, 50]" removableSort filterDisplay="row" tableStyle="min-width: 50rem">
-                    <Column field="id" header="ID" sortable></Column>
+                <DataTable v-model:filters="filters" :value="users" paginator :rows="10" tableStyle="min-width: 50rem"
+                    filterDisplay="row">
+
+                    <Column field="id" sortable header="ID"></Column>
                     <Column field="name" header="Name" sortable>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText v-model="filterModel.value" @input="filterCallback()" class="p-column-filter"
                                 placeholder="Search by name" />
                         </template>
                     </Column>
+
+
+
+                    <Column field="name" header="Name" style="min-width: 12rem">
+                        <template #body="{ data }">
+                            {{ data.name }}
+                        </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                                class="p-column-filter" placeholder="Search by name" />
+                        </template>
+                    </Column>
+
                     <Column field="email" header="Email" sortable>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText v-model="filterModel.value" @input="filterCallback()" class="p-column-filter"
