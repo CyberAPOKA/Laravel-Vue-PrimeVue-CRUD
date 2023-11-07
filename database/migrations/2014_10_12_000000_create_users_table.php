@@ -1,5 +1,7 @@
 <?php
 
+use App\Core\Constants\UserRole;
+use App\Core\Constants\UserStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,11 +17,19 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->date('birthdate')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('cpf')->nullable()->unique();
+            $table->string('phone_number')->nullable();
+            $table->string('country')->nullable();
+            $table->enum('status', UserStatus::values())->nullable();;
+            $table->enum('role', UserRole::values())->nullable();;
+            $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->foreignId('current_team_id')->nullable();
-            $table->string('profile_photo_path', 2048)->nullable();
+            // $table->foreignId('current_team_id')->nullable();
+            // $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamps();
         });
     }

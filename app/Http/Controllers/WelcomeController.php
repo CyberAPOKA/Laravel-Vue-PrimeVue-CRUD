@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\Log;
 
 class WelcomeController extends Controller
 {
@@ -13,12 +14,21 @@ class WelcomeController extends Controller
     {
         $canLogin = Route::has('login');
         $canRegister = Route::has('register');
-        $users = User::get(['id', 'name', 'email']);
+        $users = User::get(['id', 'name', 'email', 'birthdate']);
 
         return Inertia::render('Welcome', [
             'canLogin' => $canLogin,
             'canRegister' => $canRegister,
             'users' => $users
+        ]);
+    }
+
+    public function logs()
+    {
+        $logs = Log::all();
+
+        return Inertia::render('Logs', [
+            'logs' => $logs
         ]);
     }
 }
