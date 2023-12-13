@@ -18,9 +18,10 @@
     @inertiaHead
 
     <link id="theme-link" rel="stylesheet" href="{{ asset('themes/lara-light-purple/theme.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js"></script>
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased overflow-x-hidden">
     @inertia
 </body>
 

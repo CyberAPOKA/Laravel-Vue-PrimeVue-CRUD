@@ -25,7 +25,8 @@ class UserRequest extends FormRequest
 
         return [
             'name' => ['required', 'min:3', 'max:255'],
-            'email' => ['required', 'min:3', 'max:255', 'email', "unique:users,email,{$userId}"]
+            'email' => ['required', 'min:3', 'max:255', 'email', "unique:users,email,{$userId}"],
+            'cpf' => ["cpf_unique:{$userId}"],
         ];
     }
 
@@ -34,12 +35,11 @@ class UserRequest extends FormRequest
     {
         return [
             'required' => 'Campo obrigatório.',
-            'name.min' => 'Mínimo 3 caracteres.',
-            'email.min' => 'Mínimo 3 caracteres.',
-            'name.max' => 'Máximo 3 caracteres.',
-            'email.max' => 'Máximo 3 caracteres.',
+            'min' => 'Mínimo 3 caracteres.',
+            'max' => 'Máximo 3 caracteres.',
             'email.email' => 'Deve ser um Email válido.',
-            'email.unique' => 'Email já cadastrado.'
+            'email.unique' => 'Email já cadastrado.',
+            'cpf.cpf_unique' => 'CPF já cadastrado.',
         ];
     }
 }

@@ -12,7 +12,11 @@ export default {
         './resources/js/**/*.vue',
         "./index.html",
         "./src/**/*.{vue,js,ts,jsx,tsx}",
-        "./node_modules/primevue/**/*.{vue,js,ts,jsx,tsx}"
+        "./node_modules/primevue/**/*.{vue,js,ts,jsx,tsx}",
+        "./resources/**/*.blade.php",
+        "./resources/**/*.js",
+        "./resources/**/*.vue",
+        "./node_modules/flowbite/**/*.js"
     ],
 
     theme: {
@@ -29,5 +33,5 @@ export default {
         },
     },
 
-    plugins: [forms, typography],
+    plugins: [forms, typography, require('flowbite/plugin')],
 };

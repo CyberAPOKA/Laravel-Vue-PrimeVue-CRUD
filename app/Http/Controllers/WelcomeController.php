@@ -14,7 +14,7 @@ class WelcomeController extends Controller
     {
         $canLogin = Route::has('login');
         $canRegister = Route::has('register');
-        $users = User::get(['id', 'name', 'email', 'birthdate']);
+        $users = User::get(['id', 'name', 'email', 'birthdate', 'gender', 'cpf', 'phone_number', 'city', 'status', 'role', 'email_verified_at']);
 
         return Inertia::render('Welcome', [
             'canLogin' => $canLogin,

@@ -21,15 +21,13 @@ return new class extends Migration
             $table->string('gender')->nullable();
             $table->string('cpf')->nullable()->unique();
             $table->string('phone_number')->nullable();
-            $table->string('country')->nullable();
+            $table->string('city')->nullable();
             $table->enum('status', UserStatus::values())->nullable();;
             $table->enum('role', UserRole::values())->nullable();;
-            $table->boolean('is_active')->default(true);
+            // $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            // $table->foreignId('current_team_id')->nullable();
-            // $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamps();
         });
     }

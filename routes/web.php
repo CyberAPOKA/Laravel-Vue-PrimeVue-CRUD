@@ -32,5 +32,5 @@ Route::middleware([
     Route::put('update-user/{id}', [UserController::class, 'update'])->middleware([HandlePrecognitiveRequests::class]);
     Route::delete('delete-user/{id}', [UserController::class, 'delete'])->middleware([HandlePrecognitiveRequests::class]);
     Route::get('logs', [WelcomeController::class, 'logs'])->name('logs');
-    Route::get('export', [UserController::class, 'export'])->name('export');
+    Route::get('export-excel', [UserController::class, 'exportExcel'])->name('export.excel');
 });
