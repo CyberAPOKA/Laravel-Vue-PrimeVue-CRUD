@@ -68,13 +68,14 @@
                                 </a>
                             </li>
 
-                            <li>
-                                <a :href="route('export.excel')" download
+                            <!-- <li>
+                                <a :href="route('export.pdf')" target="_blank"
                                     class="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-[var(--surface-400)] mt-2">
                                     <Pdf />
                                     <span class="whitespace-nowrap font-bold text-xl text-[var(--text-color)]">PDF</span>
                                 </a>
-                            </li>
+                            </li> -->
+
                         </ul>
                     </div>
 

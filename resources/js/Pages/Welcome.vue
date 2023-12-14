@@ -8,6 +8,7 @@ import InputText from 'primevue/inputtext';
 import Calendar from 'primevue/calendar';
 import { usePrimeVue } from 'primevue/config';
 import Dropdown from 'primevue/dropdown';
+import Pdf from '@/Svgs/Pdf.vue';
 import Modal from '@/Components/Modal.vue';
 import Processing from '@/Components/Processing.vue';
 import Card from 'primevue/card';
@@ -25,14 +26,13 @@ import InputMask from 'primevue/inputmask';
 import Tag from 'primevue/tag';
 import TriStateCheckbox from 'primevue/tristatecheckbox';
 import InputSwitch from 'primevue/inputswitch';
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+
 
 const toast = useToast();
 
 const props = defineProps({
-    canLogin: Boolean,
-    canRegister: Boolean,
-    laravelVersion: String,
-    phpVersion: String,
     users: Array
 });
 
@@ -51,16 +51,6 @@ const users = computed(() => {
         verified: user.email_verified_at != null,
     }));
 });
-
-// const filters = ref({
-//     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-//     email: { value: null, matchMode: FilterMatchMode.CONTAINS },
-//     birthdate: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-// });
-
-// atenção nos seguintes detalhes:
-// filterDisplay="row"
-// v-model:filters="filters"
 
 const PrimeVue = usePrimeVue();
 
@@ -81,25 +71,6 @@ const changeTheme = (newTheme) => {
         life: 3000
     });
 };
-
-const selectedUser = ref();
-const groupedUsers = computed(() => {
-    const groups = {};
-    for (const user of props.users) {
-        if (!groups[user.group]) {
-            groups[user.group] = {
-                label: user.group,
-                items: []
-            };
-        }
-        groups[user.group].items.push({
-            label: user.name,
-            value: user
-        });
-    }
-    return Object.values(groups);
-});
-
 const showThemeModal = ref(false);
 const openThemeModal = () => {
     showThemeModal.value = true;
@@ -240,31 +211,6 @@ const deleteUser = () => {
     });
 };
 
-const filters = ref();
-
-const initFilters = () => {
-    filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        email: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
-        name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
-        phone_number: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        birthdate: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-        city: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
-        cpf: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        role: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        gender: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        verified: { value: null, matchMode: FilterMatchMode.EQUALS },
-
-    };
-};
-
-initFilters();
-
-const clearFilter = () => {
-    initFilters();
-};
-
 const formatDate = (value) => {
     return value.toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -354,17 +300,98 @@ const getSeverityGender = (gender) => {
 
 const cities = ['New York', 'Rome', 'London', 'Istanbul', 'Paris']
 
-const exportDeactivationTimer = ref(false);
 
-const exportUsers = () => {
-    exportDeactivationTimer.value = true;
-    setTimeout(() => {
-        exportDeactivationTimer.value = false;
-    }, 3000);
+const dt = ref(null);
 
-    window.location.href = '/export';
+const filters = ref();
+
+const initFilters = () => {
+    filters.value = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        email: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
+        name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
+        phone_number: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        birthdate: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+        city: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
+        cpf: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        role: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        gender: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        verified: { value: null, matchMode: FilterMatchMode.EQUALS },
+
+    };
 };
 
+initFilters();
+
+const clearFilter = () => {
+    initFilters();
+    filteredUsers.value = [];
+};
+
+const filteredUsers = ref([]);
+
+const updateFilteredUsers = (userData) => {
+    if (!filteredUsers.value.some(user => user.id === userData.id)) {
+        filteredUsers.value.push(userData);
+    }
+};
+
+function calculateFilteredUsers(allUsers, filters) {
+
+    return allUsers.filter(user => {
+
+        if (filters.name && filters.name.constraints[0].value) {
+            if (!user.name.includes(filters.name.constraints[0].value)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+}
+
+watch(() => props.filters, () => {
+    filteredUsers.value = calculateFilteredUsers(props.users, dt.value.filters);
+}, { deep: true });
+
+function formatDatePdf(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR");
+}
+
+const downloadPdf = () => {
+    const doc = new jsPDF();
+
+    const columns = [
+        { header: "ID", dataKey: "id" },
+        { header: "Nome", dataKey: "name" },
+        { header: "Email", dataKey: "email" },
+        { header: "Nascimento", dataKey: "birthdate" },
+        { header: "CPF", dataKey: "cpf" },
+        { header: "Status", dataKey: "status" },
+        { header: "Cargo", dataKey: "role" },
+        { header: "Cidade", dataKey: "city" },
+        { header: "Número", dataKey: "phone_number" },
+    ];
+
+    const tableData = calculateFilteredUsers(props.users, filters.value).map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        birthdate: formatDatePdf(user.birthdate),
+        cpf: formatCpf(user.cpf),
+        status: user.status,
+        role: user.role,
+        city: user.city,
+        phone_number: formatPhoneNumber(user.phone_number),
+    }));
+
+    doc.text("Relatório de Usuários Filtrados", 10, 10);
+    doc.autoTable(columns, tableData);
+
+    doc.save("users.pdf");
+};
 </script>
 
 <template>
@@ -530,10 +557,10 @@ const exportUsers = () => {
                     </div>
                     <div class="flex justify-between items-center mt-8">
                         <button type="button" @click="closeCreateUserModal"
-                            class="p-4 border border-red-500 rounded-2xl hover:bg-red-500 w-28">Cancelar</button>
+                            class="py-4 text-[var(--primary-color-text)] border border-none rounded-2xl bg-red-500 w-28 md:w-36 xl:w-44">Cancelar</button>
                         <button type="submit" :class="{ 'opacity-25': formCreateUser.processing }"
                             :disabled="formCreateUser.processing"
-                            class="p-4 border border-green-500 rounded-2xl hover:bg-green-500 w-28">Salvar</button>
+                            class="py-4 text-[var(--primary-color-text)] border-none border rounded-2xl bg-[var(--primary-color)] w-28 md:w-36 xl:w-44">Salvar</button>
                     </div>
                 </form>
             </template>
@@ -633,16 +660,16 @@ const exportUsers = () => {
                             </span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span>Verificar usuário {{ formUpdateUser.email_verified_at }}</span>
+                            <span>Verificar usuário</span>
                             <InputSwitch v-model="formUpdateUser.email_verified_at" />
                         </div>
                     </div>
                     <div class="flex justify-between items-center mt-8">
                         <button type="button" @click="closeUpdateUserModal"
-                            class="p-4 border border-red-500 rounded-2xl hover:bg-red-500 w-28">Cancelar</button>
+                            class="py-4 text-[var(--primary-color-text)] border border-none rounded-2xl bg-red-500 w-28 md:w-36 xl:w-44">Cancelar</button>
                         <button type="submit" :class="{ 'opacity-25': formUpdateUser.processing }"
                             :disabled="formUpdateUser.processing"
-                            class="p-4 border border-green-500 rounded-2xl hover:bg-green-500 w-28">Salvar</button>
+                            class="py-4 text-[var(--primary-color-text)] border-none border rounded-2xl bg-[var(--primary-color)] w-28 md:w-36 xl:w-44">Salvar</button>
                     </div>
                 </form>
             </template>
@@ -673,17 +700,25 @@ const exportUsers = () => {
         </template>
     </ConfirmationModal>
     <div class="sm:ml-64 p-6 lg:p-8">
-
         <div class="flex justify-center items-center">
-            <DataTable v-model:filters="filters" :value="users" paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
-                showGridlines dataKey="id" removableSort filterDisplay="menu" :globalFilterFields="['name']"
-                class="max-w-full" scrollable scrollHeight="70vh">
+            <DataTable ref="dt" v-model:filters="filters" :value="users" paginator :rows="10"
+                :rowsPerPageOptions="[5, 10, 20, 50]" showGridlines dataKey="id" removableSort filterDisplay="menu"
+                :globalFilterFields="['name']" class="max-w-full" scrollable scrollHeight="70vh">
                 <template #header>
-                    <div class="flex justify-between">
-                        <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter()" />
+                    <div class="flex flex-col lg:flex-row justify-between gap-4">
+                        <div class="flex md:flex-row-reverse gap-2 justify-between">
+                            <Button @click="downloadPdf"
+                                class="text-[var(--primary-color)] bg-[var(--surface-0)] flex gap-2">
+                                Exportar
+                                <Pdf :fillColor="'primary-color'" />
+                            </Button>
+
+                            <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter()" />
+                        </div>
                         <span class="p-input-icon-left">
                             <i class="pi pi-search" />
-                            <InputText v-model="filters['global'].value" placeholder="Pesquisa por palavra-chave" />
+                            <InputText v-model="filters['global'].value" placeholder="Pesquisa por palavra-chave"
+                                class="w-full" />
                         </span>
                     </div>
                 </template>
@@ -814,7 +849,6 @@ const exportUsers = () => {
                 </Column>
             </DataTable>
         </div>
-
     </div>
 </template>
 
@@ -858,18 +892,3 @@ const exportUsers = () => {
     transform: translateY(-10px);
 }
 </style>
-<!-- <div v-if="canLogin" class="sm:fixed sm:top-0 sm:end-0 p-6 text-end z-10">
-    <Link v-if="$page.props.auth.user" :href="route('dashboard')"
-        class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
-    Dashboard</Link>
-
-    <template v-else>
-        <Link :href="route('login')"
-            class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
-        Log in</Link>
-
-        <Link v-if="canRegister" :href="route('register')"
-            class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
-        Register</Link>
-    </template>
-</div> -->

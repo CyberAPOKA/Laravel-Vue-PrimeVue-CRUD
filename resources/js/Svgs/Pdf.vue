@@ -23,7 +23,8 @@ const props = defineProps({
 const fillColor = computed(() => {
     return {
         'black': '#0F172A',
-        'white': 'white'
+        'white': 'white',
+        'primary-color': 'var(--primary-color)'
     }[props.fillColor];
 });
 
@@ -62,7 +63,7 @@ const size = computed(() => {
 });
 </script>
 <template>
-    <svg :class="size" fill="var(--surface-900)" :stroke-width="strokeWidth" version="1.1" id="Layer_1"
+    <svg :class="size" :fill="fillColor" :stroke-width="strokeWidth" version="1.1" id="Layer_1"
         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 318.188 318.188"
         xml:space="preserve">
         <g>

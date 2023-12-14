@@ -14,7 +14,7 @@ class UserController extends Controller
 {
     public function create(UserRequest $request)
     {
-        // sleep(5);
+        // sleep(3);
         // dd($request->all());
 
         $birthdate = Carbon::parse($request->input('birthdate'))->format('Y-m-d');
@@ -48,6 +48,8 @@ class UserController extends Controller
 
     public function update(UserRequest $request, $id)
     {
+        // sleep(3);
+        
         $user = User::findOrFail($id);
 
         $birthdate = Carbon::parse($request->input('birthdate'))->format('Y-m-d');
